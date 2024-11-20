@@ -10,20 +10,35 @@ This Python-based command-line tool allows users to download Sentinel-2 imagery 
    python3 --version
    ```
 
-2. **Required Python Packages**  
-   Install the required dependencies using `pip`. It's recommended to use a virtual environment:
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate  # For Linux/macOS
-   venv\Scripts\activate  # For Windows
-   ```
+### 2. **Required Python Packages**
+Install the required dependencies using `pip`. It is recommended to use a virtual environment to isolate the project's dependencies.
 
-   Then, install dependencies:
+#### Step-by-Step:
+
+1. **Create a virtual environment**  
+   Run the following command to create a virtual environment (named `venv`):
+
+   ```bash
+   python -m venv venv
+   ```
+2. **Activate the virtual environment**
+
+After creating the virtual environment, activate it by running one of the following commands based on your operating system:
+
+- For Linux/macOS:
+
+  ```bash
+  source venv/bin/activate
+- For Windows:
+
+  ```bash
+  venv/Scripts/activate
+3. **Install dependencies**
    ```bash
    pip install -r requirements.txt
    ```
 
-3. **SentinelHub Account**  
+4. **SentinelHub Account**  
    You need a valid SentinelHub account and access to Sentinel-2 imagery. Obtain your **Client ID** and **Client Secret** from the [SentinelHub dashboard](https://www.sentinel-hub.com/).
 
 ## File Structure
@@ -40,7 +55,7 @@ This Python-based command-line tool allows users to download Sentinel-2 imagery 
 Run the CLI tool with the following command:
 
 ```bash
-python3 cli_tool.py --client_id <your-client-id> --client_secret <your-client-secret> --aoi_file <path-to-aoi-geojson> --toi "<start-date>/<end-date>" --image_type "<image-type>" --format <image-format>
+python cli_tool.py --client_id <your-client-id> --client_secret <your-client-secret> --aoi_file <path-to-aoi-geojson> --toi "<start-date>/<end-date>" --image_type "<image-type>" --format <image-format>
 ```
 
 ### Parameters
@@ -57,10 +72,10 @@ python3 cli_tool.py --client_id <your-client-id> --client_secret <your-client-se
 ### Example Command
 
 ```bash
-python3 cli_tool.py --client_id 85101-709b70525cae --client_secret K6mGeAEpCPNA --aoi_file paris.geojson --toi "2023-01-01/2023-02-01" --image_type "ndvi" --format "tiff"
+python cli_tool.py --client_id xxxxx --client_secret xxxxx --aoi_file paris.geojson --toi "2023-01-01/2023-01-15" --image_type "ndvi" --format "tiff"
 ```
 
-This will download Sentinel-2 NDVI imagery for the area defined in `paris.geojson` during January 2023.
+This will download Sentinel-2 NDVI imagery less than 20 percent cloud cover for the area defined in `paris.geojson` during the first 15 days of January 2023.
 
 ## Key Assumptions
 
@@ -77,4 +92,4 @@ This will download Sentinel-2 NDVI imagery for the area defined in `paris.geojso
 
 ## Conclusion
 
-This tool provides an easy way to download Sentinel-2 imagery for specific areas and time periods, with basic validation for the AOI size and cloud cover. Simply provide the required parameters, and the tool will handle the rest.
+This tool provides an easy way to download Sentinel-2 imagery for specific areas and time periods. Simply provide the required parameters, and the tool will handle the rest.
