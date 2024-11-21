@@ -55,7 +55,7 @@ After creating the virtual environment, activate it by running one of the follow
 Run the CLI tool with the following command:
 
 ```bash
-python cli_tool.py --client_id <your-client-id> --client_secret <your-client-secret> --aoi_file <path-to-aoi-geojson> --toi "<start-date>/<end-date>" --image_type "<image-type>" --format <image-format>
+python cli_tool.py --client_id <your-client-id> --client_secret <your-client-secret> --aoi_file <path-to-aoi-geojson> --toi "<start-date>/<end-date>" --image_type "<image-type>" --format "<image-format>"
 ```
 
 ### Parameters

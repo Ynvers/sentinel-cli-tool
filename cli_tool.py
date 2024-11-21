@@ -95,7 +95,7 @@ def generate_evalscript(image_type):
         raise ValueError("Invalid image type. Supported types are 'visual' and 'ndvi'.")
 
 # Function to download image using SentinelHubRequest
-def download_image(image, aoi, config, image_type):
+def download_image(image, aoi, config, image_type,image_format):
 
     image_time = image['properties'].get('datetime', None)
     if not image_time:
@@ -108,9 +108,19 @@ def download_image(image, aoi, config, image_type):
         print(f"Error: {e}")  # Error message for evalscript issues
         return
 
+    # Map the 'image_format' argument to the correct MimeType
+    if image_format.lower() == 'png':
+        mime_type = MimeType.PNG
+    elif image_format.lower() == 'tiff':
+        mime_type = MimeType.TIFF
+    else:
+        print(f"Error: Unsupported format '{image_format}' requested.")
+        return
+
     responses = [
-        SentinelHubRequest.output_response(identifier="default", response_format=MimeType.TIFF)
+        SentinelHubRequest.output_response(identifier="default", response_format=mime_type)
     ]
+
 
     data_folder = os.getcwd()
 
@@ -141,10 +151,10 @@ def download_image(image, aoi, config, image_type):
 @click.option('--aoi_file', required=True, help="Path to the AOI file (GeoJSON format)")
 @click.option('--toi', required=True, help="Time of interest in the format YYYY-MM-DD/YYYY-MM-DD")
 @click.option('--image_type', required=True, type=click.Choice(['visual', 'ndvi'], case_sensitive=False), help="Type of the image to be processed: 'visual' or 'ndvi'")
-@click.option('--format', required=True, help="Format of the image to be downloaded (e.g., tiff, png)")
+@click.option('--image_format', required=True, help="Format of the image to be downloaded (e.g., tiff, png)")
 @click.option('--client_id', required=True, help="Your SentinelHub client ID")
 @click.option('--client_secret', required=True, help="Your SentinelHub client secret")
-def main(aoi_file, toi, image_type, format, client_id, client_secret):
+def main(aoi_file, toi, image_type, image_format, client_id, client_secret):
     # Read the AOI file and extract bounding box
     print(f"Reading AOI file from: {aoi_file}")  # Show the AOI file being processed
     aoi_bbox = read_aoi_file(aoi_file)
@@ -163,28 +173,36 @@ def main(aoi_file, toi, image_type, format, client_id, client_secret):
     start_time = datetime.datetime.strptime(time_range[0], "%Y-%m-%d")
     end_time = datetime.datetime.strptime(time_range[1], "%Y-%m-%d")
 
-    # Search for Sentinel-2 images within the time range and AOI
+# Search for Sentinel-2 images within the time range and AOI
     images = catalog.search(
         bbox=aoi_bbox,
         time=(start_time, end_time),
         collection=DataCollection.SENTINEL2_L2A,
         filter="eo:cloud_cover<= 20",
-        limit=5
+        limit=50
     )
 
     if not images:
         print("No images found for the given AOI and time range.")  # Alert if no images found
         return
 
-    # Print the found images and their details
-    for image in images:
-        image = image
+    # Convert the iterator to a list to access it by index
+    image_list = list(images)
 
+    # Check if there are any images and then process
+    if image_list:
+        image = image_list[0]  # Get the first image from the list
 
-    print(f"Selected image from {image['properties']['datetime']}")  # Confirm which image was selected
+        # Try to access image properties safely
+        try:
+            print(f"Selected image from {image['properties']['datetime']}")  # Confirm which image was selected
+        except KeyError:
+            print("Error: The selected image does not contain a 'datetime' property.")  # Handle missing property
 
-    # Download the selected image with specified type
-    download_image(image, aoi_bbox, config, image_type)
+        # Download the selected image with specified type
+        download_image(image, aoi_bbox, config, image_type, image_format)
+    else:
+        print("No images found in the search results.")  # Handle case where no images are found in the list
 
 
 if __name__ == "__main__":
