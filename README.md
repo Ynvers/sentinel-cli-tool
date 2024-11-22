@@ -55,7 +55,7 @@ After creating the virtual environment, activate it by running one of the follow
 Run the CLI tool with the following command:
 
 ```bash
-python cli_tool.py --client_id <your-client-id> --client_secret <your-client-secret> --aoi_file <path-to-aoi-geojson> --toi "<start-date>/<end-date>" --image_type "<image-type>" --format "<image-format>"
+python cli_tool.py --client_id <your-client-id> --client_secret <your-client-secret> --aoi_file <path-to-aoi-geojson> --toi "<start-date>/<end-date>" --image_type "<image-type>" --image_format "<image-format>"
 ```
 
 ### Parameters
@@ -67,15 +67,15 @@ python cli_tool.py --client_id <your-client-id> --client_secret <your-client-sec
 - `--image_type`: Type of image to be processed:
     - `"visual"` for true-color RGB images.
     - `"ndvi"` for NDVI (vegetation index) images.
-- `--format`: Format for the downloaded image (e.g., `tiff`, `png`).
+- `--image_format`: Format for the downloaded image (e.g., `tiff`, `png`).
 
 ### Example Command
 
 ```bash
-python cli_tool.py --client_id xxxxx --client_secret xxxxx --aoi_file paris.geojson --toi "2023-01-01/2023-01-15" --image_type "ndvi" --format "tiff"
+python cli_tool.py --client_id xxxxx --client_secret xxxxx --aoi_file paris.geojson --toi "2023-01-01/2023-02-01" --image_type "ndvi" --image_format "tiff"
 ```
 
-This will download Sentinel-2 NDVI imagery less than 20 percent cloud cover for the area defined in `paris.geojson` during the first 15 days of January 2023.
+This will download Sentinel-2 NDVI imagery less than 20 percent cloud cover for the area defined in `paris.geojson` during January 2023.
 
 ## Key Assumptions
 
