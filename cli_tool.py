@@ -109,19 +109,19 @@ def download_image(image, aoi, config, image_type,image_format):
     image_time = image['properties'].get('datetime', None)
     if not image_time:
         print("Error: No valid date field found in image properties.")  # Helpful error message
-        return
+        return None
 
     try:
         evalscript = generate_evalscript(image_type)
     except ValueError as e:
         print(f"Error: {e}")  # Error message for evalscript issues
-        return
+        return None
 
     # Map the 'image_format' argument to the correct MimeType
     if image_format.lower() == 'png':
         mime_type = MimeType.PNG
-    elif image_format.lower() == 'tiff':
-        mime_type = MimeType.TIFF
+    # elif image_format.lower() == 'tiff':
+    #     mime_type = MimeType.TIFF
     else:
         print(f"Error: Unsupported format '{image_format}' requested.")
         return
@@ -152,10 +152,12 @@ def download_image(image, aoi, config, image_type,image_format):
 
     try:
         print("Downloading image...")  # Inform the user about the download process
-        response = request.get_data(save_data=True)
-        print(f"Image downloaded and saved to: {data_folder}")  # Success message after download
+        response = request.get_data()
+        print(f"Image downloaded and stored in variable")
+        return response # Success message after download
     except Exception as e:
         print(f"Error downloading image: {e}")  # Error message for download failure
+        return None
 
 
 @click.command()
@@ -211,7 +213,11 @@ def main(aoi_file, toi, image_type, image_format, client_id, client_secret):
             print("Error: The selected image does not contain a 'datetime' property.")  # Handle missing property
 
         # Download the selected image with specified type
-        download_image(image, aoi_bbox, config, image_type, image_format)
+        image_data = download_image(image, aoi_bbox, config, image_type, image_format)
+        if image_data:
+            print(f"Image data downloaded successfully for {image['properties']['datetime']}.")
+        else:
+            print("Error: Image data could not be downloaded.")
     else:
         print("No images found in the search results.")  # Handle case where no images are found in the list
 
