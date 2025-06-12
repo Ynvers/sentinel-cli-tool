@@ -3,6 +3,10 @@ import geopandas as gpd
 import datetime
 import click
 from sentinelhub import SHConfig, SentinelHubCatalog, BBox, CRS, MimeType, SentinelHubRequest, DataCollection
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Function to create SentinelHub configuration using CLI arguments
 def create_sh_config(client_id, client_secret):
@@ -82,13 +86,18 @@ def generate_evalscript(image_type):
         function setup() {
             return {
                 input: ["B08", "B04"],
-                output: { bands: 1 }
+                output: { bands: 3 }
             };
         }
 
         function evaluatePixel(sample) {
             let ndvi = (sample.B08 - sample.B04) / (sample.B08 + sample.B04);
-            return [ndvi];
+            if (ndvi < -0.2) return [0.5, 0.5, 0.5];      // gray
+            else if (ndvi < 0.0) return [0.8, 0.4, 0.0];  // brown
+            else if (ndvi < 0.2) return [1.0, 1.0, 0.0];  // yellow
+            else if (ndvi < 0.4) return [0.6, 0.8, 0.2];  // light green
+            else if (ndvi < 0.6) return [0.2, 0.8, 0.2];  // green
+            else return [0.0, 0.4, 0.0];                  // dark green
         }
         """
     else:
@@ -130,11 +139,13 @@ def download_image(image, aoi, config, image_type,image_format):
             SentinelHubRequest.input_data(
                 data_collection=DataCollection.SENTINEL2_L2A,
                 time_interval=(image_time, image_time),
-                maxcc=0.2
+                maxcc=0.2,
+                #size=(1024, 1024)
             )
         ],
         responses=responses,
         bbox=aoi,
+        size=(1024, 1024),
         config=config,
         data_folder=data_folder
     )

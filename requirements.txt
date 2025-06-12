@@ -2,3 +2,4 @@ geopandas
 shapely
 click
 sentinelhub
+python-dotenv
