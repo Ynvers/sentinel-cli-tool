@@ -4,6 +4,7 @@ import datetime
 import click
 from sentinelhub import SHConfig, SentinelHubCatalog, BBox, CRS, MimeType, SentinelHubRequest, DataCollection
 from dotenv import load_dotenv
+from utils import plot_ndvi_image
 
 # Load environment variables from .env file
 load_dotenv()
@@ -104,7 +105,7 @@ def generate_evalscript(image_type):
         raise ValueError("Invalid image type. Supported types are 'visual' and 'ndvi'.")
 
 # Function to download image using SentinelHubRequest
-def download_image(image, aoi, config, image_type,image_format):
+def download_image_and_plot(image, aoi, config, image_type,image_format):
 
     image_time = image['properties'].get('datetime', None)
     if not image_time:
@@ -145,7 +146,7 @@ def download_image(image, aoi, config, image_type,image_format):
         ],
         responses=responses,
         bbox=aoi,
-        size=(1024, 1024),
+        # size=(1024, 1024),
         config=config,
         data_folder=data_folder
     )
@@ -162,12 +163,19 @@ def download_image(image, aoi, config, image_type,image_format):
 
 @click.command()
 @click.option('--aoi_file', required=True, help="Path to the AOI file (GeoJSON format)")
-@click.option('--toi', required=True, help="Time of interest in the format YYYY-MM-DD/YYYY-MM-DD")
+@click.option('--toi', required=False, help="Time of interest in the format YYYY-MM-DD/YYYY-MM-DD")
 @click.option('--image_type', required=True, type=click.Choice(['visual', 'ndvi'], case_sensitive=False), help="Type of the image to be processed: 'visual' or 'ndvi'")
 @click.option('--image_format', required=True, help="Format of the image to be downloaded (e.g., tiff, png)")
-@click.option('--client_id', required=True, help="Your SentinelHub client ID")
-@click.option('--client_secret', required=True, help="Your SentinelHub client secret")
+@click.option('--client_id', required=False, help="Your SentinelHub client ID")
+@click.option('--client_secret', required=False, help="Your SentinelHub client secret")
 def main(aoi_file, toi, image_type, image_format, client_id, client_secret):
+    # Si les identifiants ne sont pas fournis en ligne de commande, 
+    # ils seront automatiquement pris depuis le fichier .env
+    if not client_id:
+        client_id = os.getenv('client_id')
+    if not client_secret:
+        client_secret = os.getenv('client_secret')
+
     # Read the AOI file and extract bounding box
     print(f"Reading AOI file from: {aoi_file}")  # Show the AOI file being processed
     aoi_bbox = read_aoi_file(aoi_file)
@@ -178,6 +186,13 @@ def main(aoi_file, toi, image_type, image_format, client_id, client_secret):
     # Set up the SentinelHub configuration with provided credentials
     print("Setting up SentinelHub configuration...")  # Show the setup is in progress
     config = create_sh_config(client_id, client_secret)
+
+    if not toi:
+        end_time = datetime.date.today()
+        start_time = datetime.date.today() - datetime.timedelta(days=50)
+        toi = f"{start_time.strftime('%Y-%m-%d')}/{end_time.strftime('%Y-%m-%d')}"
+        print(f"Aucune période fournie, utilisation des 10 derniers jours : {toi}")
+
 
     # Set up the SentinelHubCatalog to search for images within the time range
     print(f"Searching for images between {toi}...")  # Inform about the image search
@@ -213,9 +228,13 @@ def main(aoi_file, toi, image_type, image_format, client_id, client_secret):
             print("Error: The selected image does not contain a 'datetime' property.")  # Handle missing property
 
         # Download the selected image with specified type
-        image_data = download_image(image, aoi_bbox, config, image_type, image_format)
+        image_data = download_image_and_plot(image, aoi_bbox, config, image_type, image_format)
         if image_data:
             print(f"Image data downloaded successfully for {image['properties']['datetime']}.")
+            # Ajouter la visualisation NDVI si le type d'image est 'ndvi'
+            if image_type == 'ndvi':
+                # Le tableau numpy est dans image_data[0]
+                plot_ndvi_image(image_data[0])
         else:
             print("Error: Image data could not be downloaded.")
     else:

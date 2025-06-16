@@ -3,3 +3,4 @@ shapely
 click
 sentinelhub
 python-dotenv
+matplotlib
